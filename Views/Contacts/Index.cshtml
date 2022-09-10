@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<AddressBookMVC.Models.Contact>
 @inject AddressBookMVC.Services.Interfaces.IImageService _imageService
 
+<link rel="stylesheet" href="//cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css" />
+
 @{
     ViewData["Title"] = "Index";
 }
@@ -10,7 +12,7 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<table class="table">
+<table class="table" id="contactTable">
     <thead>
         <tr>
             <th>
@@ -51,7 +53,7 @@
         {
             <tr>
                 <td>
-                    <img src="@_imageService.ConvertByteArrayToFile(item.ImageData, item.ImageType)" height="125" width="auto"/>
+                    <img src="@_imageService.ConvertByteArrayToFile(item.ImageData, item.ImageType)" class="img-fluid"/>
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.FirstName)
@@ -89,3 +91,12 @@
         }
     </tbody>
 </table>
+@section scripts{
+    <script src="//cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#contactTable').DataTable();
+        });
+    </script>
+
+}
