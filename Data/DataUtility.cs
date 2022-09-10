@@ -12,7 +12,7 @@ namespace AddressBookMVC.Data
         public static string GetConnectionString(IConfiguration configuration)
         {
             //the default connection string will come from appSettings
-            var connectionString = configuration.GetConnectionString("DefaultConnectionString");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             //it will be automatically overwritten if running on heroku
             var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
