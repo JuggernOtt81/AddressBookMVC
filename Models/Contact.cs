@@ -24,7 +24,7 @@ namespace AddressBookMVC.Models
         public string City { get; set; }
         [Display(Name = "State")]
         public string State { get; set; }
-        [Display(Name = "ZIP code (or Postal Code)")]
+        [Display(Name = "ZIP/Postal Code")]
         [DataType(DataType.PostalCode)]
         public string PostZip { get; set; }
         [Display(Name = "Email Address")]
@@ -33,12 +33,13 @@ namespace AddressBookMVC.Models
         [Display(Name = "Phone Number")]
         [DataType(DataType.PhoneNumber)]
         public string Phone { get; set; }
+        [DataType(DataType.DateTime)]
         public DateTime Created { get; set; }
         [NotMapped]
         [DataType(DataType.Upload)]
         public IFormFile ImageFile { get; set; }
         public byte[] ImageData { get; set; }
-        [Display(Name = ".jpg .png .gif .pdf")]
+        [Display(Name = "file extension")]
         public string ImageType { get; set; }
         [Display(Name = "Record Number: ")]
         public int Id { get; set; }
