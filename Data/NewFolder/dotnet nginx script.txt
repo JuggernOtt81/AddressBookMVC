@@ -1,0 +1,172 @@
+HOW TO BUILD YOUR OWN WEBSERVER TO HOST .NET APPLICATIONS
+
+Q: why?
+A: because!
+	--well, initially, it was because there's a particular coding bootcamp that specializes in .NET and they've been using netlify for their students to host and showcase their standard HTML/CSS/JavaScript sites, and heroku to host and showcase their .NET MVC web apps - but recent news says heroku's free offerings are about to end. so, for lack of another well known free hosting option for students to practice on. plus also, having something more local that you feel like you have more contol over is a little more comforting to some students than some abstract 'cloud' service which may be doing whatever they please with the content/traffic. 
+	--proxmox is chosen for the ability to clone/template a VM. so if you really screw things up, you have a rollback point. or atleast a 'boiler plate' starting platform.
+	--this is intended to be used on LAN only! if you wish to take what you build/learn here and send that up to a paid service later, that's much better than getting on a paid service and learning the hard way about DTUs and the seemingly ambigous and amorphous billing methodology they use to bump you out of a so-called 'free-tier' into a pay as you go plan that costs $300 for a 20MB of data throughput over the course of 4 hours (not like i have a specific real life incident in mind related to Azure, or anything).
+	--DO NOT turn a home hosted machine with open ports toward the www. that is truly asking for trouble. everything on your home network will be at risk.
+	--so, there you go, that's why: the tool that was being use may not be around any longer, there's profit in learning more about how webhosting works with a more hands-on approach, the cost to play around and make huge mistakes is virtually nil, and almost everyone can find the required hardware in a closet/basement/attic/garage/thrift store/pawn shop.
+
+this is written with the assumption that you will be adding an extra appliance to your LAN. we will be using proxmox as the bare metal layer hypervisor, and then running ubuntu server in a virtual machine, nginx will serve/proxy what is run in the .net environment.
+---
+
+hardware: 64bit traditional processor AMD64, x86-64, pretty much almost any mainstream CPU from intel or AMD between 2004 and 2020 (at the time of this writing, ARM is not ready yet, so raspberry pi likely won't work well)
+
+ubuntu server
+1.0 GHz Dual Core Processor.
+20GB hard drive space.
+1GB RAM.
+
+.net 6
+Processor	1 GHz
+RAM	512 MB
+Minimum disk space (64-bit)	4.5 GB
+
+proxmox
+CPU: 64bit (Intel EMT64 or AMD64)
+Intel VT/AMD-V capable CPU/Mainboard (for KVM Full Virtualization support)
+Minimum 1 GB RAM
+Hard drive
+One NIC
+
+nginx
+from 'virtually a potato' to 'big data farm'
+depends on the usage demand
+simple portfolio geting 100 views per week = potato
+
+based on the above requirements, we have to find the common minimums:
+in practice, proxmox does not like to allow you access to your full disk, so bare that in mind.
+a decent cheap minimal setup (the one i'm testing on) will something look like this (all in, might cost $0 - $100):
+
+intel i3-2100 (2 cores/4 threads) (VT-x)
+2x4GB DIMMs = 8GB DDR3 RAM
+120GB SSD
+---
+0- *optional* download ventoy, and create a ventoy drive for all your ISO (we'll only be using one today, but you may want to have this handy tool for future use, and it saves money and drawer space compared to having dozens of USB sticks, one for each ISO)
+
+1- proxmox
+on your windows pc:	
+		A- download proxmox
+		B- using ventoy (or rufus or etcher) put the ISO on the drive
+		C- insert drive into 'new' appliance
+		D- power on appliance and spam the boot-options key for that motherboard
+		E- select the USB drive:
+			--USB>ventoy>proxmox (if you have ventoy drive)
+			--USB>proxmox (if using a plain drive)
+		F- run the proxmox setup 
+		(by default, the proxmox machine will need its password entered again if ever powered down and any web-ui/ssh will be unavailable without it being manually entered on the host hardware, so keep that in mind before deciding to throw away the keyboard/mouse/monitor or hiding the machine in a hard to reach area.)
+
+2- ubuntu	
+		A- add ubuntu server to ISO collection on proxmox
+		B- create new VM
+			--
+			--
+			--
+		C- start VM
+		D- run ubuntu setup
+			--
+			--
+			--
+		E- update/upgrade
+		F- install dotnet
+		G- install nginx
+		H- install net-tools
+		I- mkdir /srv/www/dotnet/
+		J- prepare for file transfer (if you know a way that doesn't require remote root, use it!)
+			--sudo passwd root
+			--sudo nano etc/ssh/sshd_config
+			--fine 'PermitRootLogin', remove '#' and replace anything on the line after 'PermitRootLogin' with 'yes'
+			----------------------------------
+			[ctrl+x] to close, [enter] to save
+			----------------------------------
+			--reboot
+			--login
+			--run ifconfig and take note of the IPv4 address
+		on your windows pc:
+			--download and install WinSCP
+			--log in to ubuntu server with IPv4 address and root account
+		K- publish the .net app
+		on your windows pc:
+			in Visual Studio-- 
+			--publish>folder>next>finish
+			--show all settings>configuration=release>select target framework>deployment mode = self-contained>target-runtime=linux-x64
+			--save
+			--publish
+			--wait for 'publish succeeded'
+			--open folder
+		L- transfer files
+			in WinSCP--
+			in the server panel:
+			--navigate to /srv/www/dotnet/
+			--create a new folder in srv/www/dotnet/ to contain the project
+			--from the windows explorer folder Visual Studio opened, copy all and paste into this new project folder
+		M- 
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+user@host:$ sudo nano /etc/nginx/sites-available/default
+----------------------------------
+delete everything, then paste this
+----------------------------------
+server {
+    listen        80;
+    server_name   example.com *.example.com;
+    location / {
+        proxy_pass         http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection keep-alive;
+        proxy_set_header   Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+----------------------------------
+[ctrl+x] to close, [enter] to save
+----------------------------------
+user@host:$ sudo nginx -t
+
+user@host:$ sudo nano /etc/systemd/system/app1.service
+----------------------------------
+delete everything, then paste this
+----------------------------------
+[Unit]
+Description= mvcnew webapp
+[Service]
+WorkingDirectory=/srv/www/dotnet/Showcase-MVC/
+ExecStart=/usr/bin/dotnet /srv/www/dotnet/Showcase-MVC/ShowcaseMVC.dll
+Restart=always
+# Restart service after 10 seconds if the dotnet service crashes:
+RestartSec=10
+SyslogIdentifier=mvcnew
+Environment=ASPNETCORE_ENVIRONMENT=Production
+
+[Install]
+WantedBy=multi-user.target
+----------------------------------
+[ctrl+x] to close, [enter] to save
+----------------------------------
+
+
+user@host:$ systemctl enable app1.service
+user@host:$ systemctl start app1.service
+user@host:$ systemctl status app1.service

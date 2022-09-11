@@ -3,8 +3,38 @@
     ViewData["Title"] = "Error";
 }
 
-<h1 class="text-danger">My Error.</h1>
-<h2 class="text-danger">How did we wind up here?</h2>
+<html>
+<head>
+    <title>Unreachable State</title>
+    <style>
+        body {
+            width: 35em;
+            margin: 0 auto;
+            justify-content: left;
+            font-family: Tahoma, Verdana, Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col">
+                <h1>Unreachable State</h1>
+            </div>
+            <div class="col">
+                <a href="https://xkcd.com/2200"> <img src="https://imgs.xkcd.com/comics/unreachable_state.png" /></a>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h5>ERROR:</h5>
+            <p>We&#39;ve reached an unreachable state.<br> Anything is possible.<br> The limits were in our heads all along.<br> Follow your dreams.</p>
+        </div>
+    </div>
+</body>
+</html>
+
 
 @if (Model.ShowRequestId)
 {
